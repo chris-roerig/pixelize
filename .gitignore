@@ -1,0 +1,12 @@
+# Binaries
+/pixelize
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Test outputs
+*-output.png
