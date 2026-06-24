@@ -2,6 +2,10 @@
 
 A fast, minimal CLI tool that converts images into pixel art using configurable block sampling and nearest-neighbor scaling.
 
+| Before | After |
+|--------|-------|
+| ![original](examples/icons.png) | ![pixelized](examples/icons-retro.png) |
+
 ## Install
 
 ```bash
