@@ -4,7 +4,7 @@ A fast, minimal CLI tool that converts images into pixel art using configurable 
 
 | Before | After |
 |--------|-------|
-| ![original](examples/icons.png) | ![pixelized](examples/icons-retro.png) |
+| ![original](examples/cassette.png) | ![pixelized](examples/cassette-gba.png) |
 
 ## Install
 
