@@ -5,6 +5,11 @@ A fast, minimal CLI tool that converts images into pixel art using configurable 
 | Before | After |
 |--------|-------|
 | ![original](examples/cassette.png) | ![pixelized](examples/cassette-gba.png) |
+| ![original](examples/castle.png) | ![pixelized](examples/castle-snes.png) |
+| ![original](examples/game.png) | ![pixelized](examples/castle-ps1.png) |
+| ![original](examples/icons.png) | ![pixelized](examples/icons-fine.png) |
+| ![original](examples/icons.png) | ![pixelized](examples/icons-fine.png) |
+| ![original](examples/icons2.png) | ![pixelized](examples/icons2-ps1.png) |
 
 ## Install
 
