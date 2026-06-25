@@ -91,19 +91,19 @@ Generated with `pixelize --preset all`:
 
 | retro | gameboy | pico8 | nes |
 |-------|---------|-------|-----|
-| ![retro](examples/icons-retro.png) | ![gameboy](examples/icons-gameboy.png) | ![pico8](examples/icons-pico8.png) | ![nes](examples/icons-nes.png) |
+| ![retro](examples/cassette-retro.png) | ![gameboy](examples/cassette-gameboy.png) | ![pico8](examples/cassette-pico8.png) | ![nes](examples/cassette-nes.png) |
 
 | snes | genesis | gba | ps1 |
 |------|---------|-----|-----|
-| ![snes](examples/icons-snes.png) | ![genesis](examples/icons-genesis.png) | ![gba](examples/icons-gba.png) | ![ps1](examples/icons-ps1.png) |
+| ![snes](examples/cassette-snes.png) | ![genesis](examples/cassette-genesis.png) | ![gba](examples/cassette-gba.png) | ![ps1](examples/cassette-ps1.png) |
 
 | n64 | c64 | cga | mono |
 |-----|-----|-----|------|
-| ![n64](examples/icons-n64.png) | ![c64](examples/icons-c64.png) | ![cga](examples/icons-cga.png) | ![mono](examples/icons-mono.png) |
+| ![n64](examples/cassette-n64.png) | ![c64](examples/cassette-c64.png) | ![cga](examples/cassette-cga.png) | ![mono](examples/cassette-mono.png) |
 
 | sprite | poster | chunky | fine |
 |--------|--------|--------|------|
-| ![sprite](examples/icons-sprite.png) | ![poster](examples/icons-poster.png) | ![chunky](examples/icons-chunky.png) | ![fine](examples/icons-fine.png) |
+| ![sprite](examples/cassette-sprite.png) | ![poster](examples/cassette-poster.png) | ![chunky](examples/cassette-chunky.png) | ![fine](examples/cassette-fine.png) |
 
 ## How It Works
 
