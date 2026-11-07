@@ -1,10 +1,10 @@
 {
   "name": "sprite",
-  "description": "crisp sprites (block 4, dominant mode, sharpened)",
-  "block": 4,
-  "colors": 0,
+  "description": "crisp sprites (block 8, 16 colors, dominant mode)",
+  "block": 8,
+  "colors": 16,
   "dither": false,
-  "sharpen": true,
+  "sharpen": false,
   "mode": "dominant",
   "palette": "original"
 }

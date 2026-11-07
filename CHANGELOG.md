@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `./.pixelize/presets/` (project), plus `--preset ./path.json` to load a preset
   file directly.
 - `--list-presets` and `--list-presets-json` to list available presets.
+- `--list-palettes` to list available palettes.
+- Palettes are now JSON files (name + hex colors) instead of hardcoded values.
+  Built-in palettes ship embedded and can be overridden or extended without
+  recompiling, via `$XDG_CONFIG_HOME/pixelize/palettes/`,
+  `./.pixelize/palettes/`, or `--palette ./file.json`.
 - Preset files are validated on load; invalid or malformed presets report the
   offending file path.
 - Output path is now optional: with a single input, pixelize infers the output
@@ -34,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   perceptual distance (redmean) instead of raw Euclidean RGB distance.
 - `dominant` mode returns a representative color for the winning region instead
   of a bit-masked key, removing a banding floor.
+- The `gameboy` palette now uses a properly spaced 4-shade DMG green ramp, and
+  the `gameboy` and `sprite` presets were retuned for better results.
 - Color reduction now applies exactly one strategy with clear precedence
   (`--bw` > named palette > `--colors`); a named palette no longer double-reduces
   with `--colors`.

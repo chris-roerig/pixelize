@@ -79,16 +79,19 @@ func TestNamedPaletteTakesPrecedenceOverColors(t *testing.T) {
 			src.SetRGBA(x, y, color.RGBA{uint8(x * 30), uint8(y * 30), 120, 255})
 		}
 	}
+	gbPalette := []color.RGBA{
+		{8, 24, 16, 255}, {52, 104, 86, 255}, {136, 192, 112, 255}, {224, 248, 208, 255},
+	}
 	cfg := Config{
 		BlockSize: 2, Scale: 1, Mode: ModeAverage,
-		Palette: PaletteGameboy, Colors: 32, Logical: true,
+		PaletteColors: gbPalette, Colors: 32, Logical: true,
 	}
 	out, err := Pixelize(src, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 	allowed := make(map[color.RGBA]bool)
-	for _, c := range gameboyColors {
+	for _, c := range gbPalette {
 		allowed[c] = true
 	}
 	b := out.Bounds()
@@ -97,7 +100,7 @@ func TestNamedPaletteTakesPrecedenceOverColors(t *testing.T) {
 			r, g, bl, a := out.At(x, y).RGBA()
 			c := color.RGBA{uint8(r >> 8), uint8(g >> 8), uint8(bl >> 8), uint8(a >> 8)}
 			if !allowed[c] {
-				t.Fatalf("pixel (%d,%d) = %v is not a gameboy palette color", x, y, c)
+				t.Fatalf("pixel (%d,%d) = %v is not a palette color", x, y, c)
 			}
 		}
 	}

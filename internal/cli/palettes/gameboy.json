@@ -1,0 +1,5 @@
+{
+  "name": "gameboy",
+  "description": "Game Boy 4-shade DMG green ramp",
+  "colors": ["#081810", "#346856", "#88c070", "#e0f8d0"]
+}

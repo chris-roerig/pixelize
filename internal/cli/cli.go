@@ -39,6 +39,10 @@ func Run() error {
 	if err != nil {
 		return err
 	}
+	palettes, err := loadPalettes()
+	if err != nil {
+		return err
+	}
 
 	block := flag.Int("block", 8, "pixel block size")
 	scale := flag.Int("scale", 0, "nearest-neighbor output scale (default: match input size)")
@@ -48,11 +52,12 @@ func Run() error {
 	transparent := flag.Bool("transparent", false, "make white pixels transparent")
 	sharpen := flag.Bool("sharpen", false, "apply edge-enhancement sharpening")
 	mode := flag.String("mode", "average", "sampling mode (average, median, dominant)")
-	palette := flag.String("palette", "original", "color palette (original, pico8, gameboy, nes)")
+	palette := flag.String("palette", "original", "color palette ("+paletteNames(palettes)+")")
 	presetFlag := flag.String("preset", "", "apply a named preset ("+presetNames(presets)+")")
 	logical := flag.Bool("logical", false, "export logical pixel grid without scaling")
 	listPresets := flag.Bool("list-presets", false, "list available presets and exit")
 	listPresetsJSON := flag.Bool("list-presets-json", false, "list available presets as JSON and exit")
+	listPalettes := flag.Bool("list-palettes", false, "list available palettes and exit")
 	showVersion := flag.Bool("version", false, "print version and exit")
 
 	flag.Usage = func() {
@@ -73,6 +78,7 @@ Flags:
       --preset string      apply a named preset, a path to a .json preset, or "all"
       --list-presets       list available presets and exit
       --list-presets-json  list available presets as JSON and exit
+      --list-palettes      list available palettes and exit
       --logical            export logical pixel grid without scaling
       --version            print version and exit
 
@@ -82,10 +88,10 @@ Modes:
       dominant           most frequent color in the block (preserves hard edges)
 
 Palettes:
-      original           use the computed colors as-is
-      pico8              PICO-8 16-color palette
-      gameboy            Game Boy 4-color green palette
-      nes                NES system palette
+      Run "pixelize --list-palettes" to see all available palettes.
+      "original" uses the computed colors as-is. Built-in palettes ship with
+      pixelize; add your own JSON files in $XDG_CONFIG_HOME/pixelize/palettes/
+      or ./.pixelize/palettes/, or pass --palette ./my-palette.json.
 
 Presets:
       Run "pixelize --list-presets" to see all available presets.
@@ -117,6 +123,11 @@ Examples:
 
 	if *listPresetsJSON {
 		return printPresetsJSON(presets)
+	}
+
+	if *listPalettes {
+		printPalettes(palettes)
+		return nil
 	}
 
 	// Apply preset as base, then let explicit flags override
@@ -183,14 +194,19 @@ Examples:
 
 		for _, name := range sortedPresetNames(presets) {
 			p := presets[name]
+			pc, err := resolvePaletteColors(p.Palette, palettes)
+			if err != nil {
+				return fmt.Errorf("preset %s: %w", name, err)
+			}
 			cfg := pixelizer.Config{
-				BlockSize: p.Block,
-				Scale:     p.Block,
-				Colors:    p.Colors,
-				Dither:    p.Dither,
-				Sharpen:   p.Sharpen,
-				Mode:      pixelizer.SamplingMode(p.Mode),
-				Palette:   pixelizer.Palette(p.Palette),
+				BlockSize:     p.Block,
+				Scale:         p.Block,
+				Colors:        p.Colors,
+				Dither:        p.Dither,
+				Sharpen:       p.Sharpen,
+				Mode:          pixelizer.SamplingMode(p.Mode),
+				Palette:       pixelizer.Palette(p.Palette),
+				PaletteColors: pc,
 			}
 			if *scale != 0 {
 				cfg.Scale = *scale
@@ -222,6 +238,11 @@ Examples:
 		fixedPal = []color.RGBA{{0, 0, 0, 255}, {255, 255, 255, 255}}
 	}
 
+	paletteColors, err := resolvePaletteColors(*palette, palettes)
+	if err != nil {
+		return err
+	}
+
 	cfg := pixelizer.Config{
 		BlockSize:        *block,
 		Scale:            scaleVal,
@@ -230,6 +251,7 @@ Examples:
 		Sharpen:          *sharpen,
 		Mode:             pixelizer.SamplingMode(*mode),
 		Palette:          pixelizer.Palette(*palette),
+		PaletteColors:    paletteColors,
 		Logical:          *logical,
 		FixedPalette:     fixedPal,
 		TransparentWhite: *transparent,

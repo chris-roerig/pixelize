@@ -116,7 +116,6 @@ func TestValidateConfig(t *testing.T) {
 		{"zero block", Config{BlockSize: 0, Scale: 1, Mode: ModeAverage, Palette: PaletteOriginal}, false},
 		{"negative scale", Config{BlockSize: 8, Scale: -1, Mode: ModeAverage, Palette: PaletteOriginal}, false},
 		{"bad mode", Config{BlockSize: 8, Scale: 1, Mode: "invalid", Palette: PaletteOriginal}, false},
-		{"bad palette", Config{BlockSize: 8, Scale: 1, Mode: ModeAverage, Palette: "invalid"}, false},
 	}
 	for _, tt := range tests {
 		err := tt.cfg.Validate()

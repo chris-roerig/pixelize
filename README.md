@@ -240,11 +240,47 @@ palette (`pico8`/`gameboy`/`nes`) > `--colors`. When a named palette is set,
 
 ## Supported Palettes
 
-Palette matching uses a perceptual distance metric.
+Palette matching uses a perceptual distance metric. List everything available
+(built-in plus any you've added):
+
+```bash
+pixelize --list-palettes
+```
 
 | Palette | Description |
 |---------|-------------|
 | `original` | Use the computed colors as-is |
 | `pico8` | PICO-8 16-color palette |
-| `gameboy` | Game Boy 4-color green palette |
+| `gameboy` | Game Boy 4-shade DMG green ramp |
 | `nes` | NES system palette |
+
+### Custom Palettes
+
+Like presets, palettes are plain JSON files you can add without rebuilding. A
+palette is a name plus a list of hex colors:
+
+```json
+{
+  "name": "sunset",
+  "description": "warm four-color sunset",
+  "colors": ["#1a1a2e", "#e94560", "#f9ed69", "#f08a5d"]
+}
+```
+
+Colors accept `#rgb`, `#rrggbb`, or `#rrggbbaa` (the `#` is optional). pixelize
+loads palettes from the following locations, in order of increasing precedence
+(a later source overrides an earlier one with the same `name`):
+
+1. **Built-in** palettes shipped inside the binary.
+2. **User** palettes in `$XDG_CONFIG_HOME/pixelize/palettes/` (defaults to
+   `~/.config/pixelize/palettes/`).
+3. **Project** palettes in `./.pixelize/palettes/`.
+
+You can also point `--palette` directly at a file:
+
+```bash
+pixelize input.png output.png --palette ./sunset.json
+```
+
+To contribute a palette upstream, add a JSON file to
+`internal/cli/palettes/` and open a pull request.
