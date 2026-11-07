@@ -60,12 +60,14 @@ func Run() error {
 	listPresets := flag.Bool("list-presets", false, "list available presets and exit")
 	listPresetsJSON := flag.Bool("list-presets-json", false, "list available presets as JSON and exit")
 	listPalettes := flag.Bool("list-palettes", false, "list available palettes and exit")
+	force := flag.Bool("force", false, "overwrite existing files (used with dump-all)")
 	showVersion := flag.Bool("version", false, "print version and exit")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, `Usage: pixelize [flags] input output
        pixelize [flags] directory
        pixelize --preset all input
+       pixelize dump-all [--force]
 
 Flags:
       --block int          pixel block size (default 8)
@@ -83,8 +85,14 @@ Flags:
       --list-presets       list available presets and exit
       --list-presets-json  list available presets as JSON and exit
       --list-palettes      list available palettes and exit
+      --force              overwrite existing files (used with dump-all)
       --logical            export logical pixel grid without scaling
       --version            print version and exit
+
+Commands:
+      dump-all             copy the built-in presets and palettes into your
+                           config dir ($XDG_CONFIG_HOME/pixelize/) for editing;
+                           use --force to overwrite existing files
 
 Modes:
       average            average color of all pixels in the block
@@ -132,6 +140,12 @@ Examples:
 	if *listPalettes {
 		printPalettes(palettes)
 		return nil
+	}
+
+	// dump-all: materialize the embedded built-in presets and palettes into the
+	// user config dir so they can be edited directly.
+	if args := flag.Args(); len(args) >= 1 && args[0] == "dump-all" {
+		return dumpAll(*force)
 	}
 
 	// Apply preset as base, then let explicit flags override

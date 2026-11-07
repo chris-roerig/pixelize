@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `dump-all` command copies the embedded built-in presets and palettes into the
+  user config directory (`$XDG_CONFIG_HOME/pixelize/`) for easy editing. Existing
+  files are preserved unless `--force` is given.
+
 ## [1.0.0] - 2026-11-07
 
 First stable release.

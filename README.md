@@ -174,6 +174,10 @@ Notes:
 - To contribute a preset upstream, add a JSON file to
   `internal/cli/presets/` and open a pull request — no Go required.
 
+Tip: run `pixelize dump-all` to copy the built-in presets and palettes into
+`~/.config/pixelize/` so you have editable starting points. See
+[Editing the Built-ins](#editing-the-built-ins).
+
 ## Examples
 
 Generated with `pixelize --preset all`:
@@ -286,6 +290,19 @@ pixelize input.png output.png --palette ./sunset.json
 
 To contribute a palette upstream, add a JSON file to
 `internal/cli/palettes/` and open a pull request.
+
+### Editing the Built-ins
+
+The built-in presets and palettes are embedded in the binary, but you can copy
+them into your config directory to edit directly:
+
+```bash
+pixelize dump-all          # writes built-ins to ~/.config/pixelize/
+pixelize dump-all --force  # overwrite existing copies
+```
+
+Existing files are left untouched unless `--force` is given. Edited copies in
+the config directory override the built-ins the next time you run pixelize.
 
 ### Extracting a Palette
 
