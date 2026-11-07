@@ -239,25 +239,51 @@ Examples:
 		return err
 	}
 
-	// Batch mode: single arg that is a directory
-	if len(args) == 1 {
+	// Batch mode: single arg that is a directory.
+	if len(args) == 1 && args[0] != "-" {
 		info, err := os.Stat(args[0])
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
+		if err == nil && info.IsDir() {
 			return runBatch(args[0], cfg)
 		}
 	}
 
-	if len(args) < 2 {
-		return errors.New("usage: pixelize input.png output.png [--block 8] [--scale 4]")
+	if len(args) == 0 {
+		flag.Usage()
+		return errors.New("no input provided")
 	}
 	if len(args) > 2 {
-		return fmt.Errorf("too many arguments (expected 2, got %d)", len(args))
+		return fmt.Errorf("too many arguments (expected input and optional output, got %d)", len(args))
 	}
 
-	return processFile(args[0], args[1], cfg)
+	// Output inference: with a single input, derive the output path. Reading
+	// from stdin ("-") with no output writes to stdout.
+	input := args[0]
+	var output string
+	if len(args) == 2 {
+		output = args[1]
+	} else if input == "-" {
+		output = "-"
+	} else {
+		output = inferOutput(input, *presetFlag)
+	}
+
+	return processFile(input, output, cfg)
+}
+
+// inferOutput derives an output path from an input path when the user omits an
+// explicit output. With a named preset it uses "<base>-<preset><ext>";
+// otherwise "<base>-pixelized<ext>". The input extension is preserved.
+func inferOutput(input, preset string) string {
+	ext := filepath.Ext(input)
+	base := strings.TrimSuffix(input, ext)
+	if ext == "" {
+		ext = ".png"
+	}
+	suffix := "pixelized"
+	if preset != "" && preset != "all" {
+		suffix = preset
+	}
+	return fmt.Sprintf("%s-%s%s", base, suffix, ext)
 }
 
 func processFile(input, output string, cfg pixelizer.Config) error {
@@ -271,11 +297,13 @@ func processFile(input, output string, cfg pixelizer.Config) error {
 		return err
 	}
 
-	if err := imageio.SavePNG(output, out); err != nil {
+	if err := imageio.Save(output, out); err != nil {
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "Wrote %s\n", output)
+	if output != "-" {
+		fmt.Fprintf(os.Stderr, "Wrote %s\n", output)
+	}
 	return nil
 }
 
@@ -290,26 +318,36 @@ func runBatch(dir string, cfg pixelizer.Config) error {
 		return err
 	}
 
-	count := 0
+	// Collect matching image files first so we can report progress.
+	var names []string
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
+		}
+		if strings.HasPrefix(e.Name(), "._") {
+			continue // skip macOS AppleDouble sidecar files
 		}
 		ext := strings.ToLower(filepath.Ext(e.Name()))
 		if !supportedExts[ext] {
 			continue
 		}
-		input := filepath.Join(dir, e.Name())
-		output := filepath.Join(outDir, e.Name())
-		if err := processFile(input, output, cfg); err != nil {
-			return fmt.Errorf("%s: %w", e.Name(), err)
-		}
-		count++
+		names = append(names, e.Name())
 	}
 
-	if count == 0 {
+	if len(names) == 0 {
 		return errors.New("no supported images found in " + dir)
 	}
-	fmt.Fprintf(os.Stderr, "Processed %d image(s)\n", count)
+
+	total := len(names)
+	for i, name := range names {
+		input := filepath.Join(dir, name)
+		output := filepath.Join(outDir, name)
+		fmt.Fprintf(os.Stderr, "[%d/%d] %s\n", i+1, total, name)
+		if err := processFile(input, output, cfg); err != nil {
+			return fmt.Errorf("%s: %w", name, err)
+		}
+	}
+
+	fmt.Fprintf(os.Stderr, "Processed %d image(s) into %s\n", total, outDir)
 	return nil
 }
