@@ -1,0 +1,10 @@
+{
+  "name": "retro",
+  "description": "classic pixel art (block 8, 32 colors, dithered)",
+  "block": 8,
+  "colors": 32,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

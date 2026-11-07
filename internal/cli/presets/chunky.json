@@ -1,0 +1,10 @@
+{
+  "name": "chunky",
+  "description": "big bold pixels (block 16, 16 colors)",
+  "block": 16,
+  "colors": 16,
+  "dither": false,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

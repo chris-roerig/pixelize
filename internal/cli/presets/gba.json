@@ -1,0 +1,10 @@
+{
+  "name": "gba",
+  "description": "Game Boy Advance (block 4, 64 colors, dithered)",
+  "block": 4,
+  "colors": 64,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

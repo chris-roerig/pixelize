@@ -1,0 +1,10 @@
+{
+  "name": "cga",
+  "description": "CGA (block 8, 4 colors, dithered)",
+  "block": 8,
+  "colors": 4,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

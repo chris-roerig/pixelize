@@ -56,13 +56,21 @@ pixelize ./photos --block 8
 | `--mode` | average | Sampling mode |
 | `--palette` | original | Color palette |
 | `--sharpen` | false | Apply edge-enhancement sharpening |
-| `--preset` | — | Apply a named preset (see below) |
+| `--preset` | — | Apply a named preset, a path to a `.json` preset, or `all` |
+| `--list-presets` | — | List available presets and exit |
 | `--logical` | false | Export the logical pixel grid without scaling |
 | `--version` | — | Print version and exit |
 
 ### Presets
 
 Use `--preset` for quick styling. Explicit flags override preset values.
+
+List everything available (built-in plus any you've added):
+
+```bash
+pixelize --list-presets
+pixelize --list-presets-json   # machine-readable
+```
 
 | Preset | Description |
 |--------|-------------|
@@ -82,6 +90,50 @@ Use `--preset` for quick styling. Explicit flags override preset values.
 | `chunky` | Big bold pixels (block 16, 16 colors) |
 | `fine` | Subtle pixelation (block 3, 64 colors, median mode, dithered) |
 | `mono` | Monochrome (block 6, 2 colors, gameboy palette, dithered) |
+
+### Custom Presets
+
+Presets are plain JSON files, so you can add your own without rebuilding. A
+preset looks like this:
+
+```json
+{
+  "name": "my-style",
+  "description": "my custom look",
+  "block": 10,
+  "colors": 12,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}
+```
+
+pixelize loads presets from the following locations, in order of increasing
+precedence (a later source overrides an earlier one with the same `name`):
+
+1. **Built-in** presets shipped inside the binary.
+2. **User** presets in `$XDG_CONFIG_HOME/pixelize/presets/` (defaults to
+   `~/.config/pixelize/presets/`).
+3. **Project** presets in `./.pixelize/presets/` relative to where you run the
+   command.
+
+You can also point `--preset` directly at a file:
+
+```bash
+pixelize input.png output.png --preset ./my-style.json
+```
+
+Notes:
+
+- The `name` field is the preset's identifier (what you pass to `--preset`). If
+  omitted, the file name (without `.json`) is used.
+- Unknown fields are rejected, so typos like `"colour"` fail loudly with the
+  offending file path.
+- Each preset is validated on load; an invalid `mode`, `palette`, or `block`
+  reports an error pointing at the file.
+- To contribute a preset upstream, add a JSON file to
+  `internal/cli/presets/` and open a pull request — no Go required.
 
 ## Examples
 

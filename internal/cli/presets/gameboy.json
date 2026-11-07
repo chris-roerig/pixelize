@@ -1,0 +1,10 @@
+{
+  "name": "gameboy",
+  "description": "Game Boy (block 6, 4 colors, gameboy palette, dithered)",
+  "block": 6,
+  "colors": 4,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "gameboy"
+}

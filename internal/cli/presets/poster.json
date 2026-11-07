@@ -1,0 +1,10 @@
+{
+  "name": "poster",
+  "description": "poster style (block 12, 8 colors)",
+  "block": 12,
+  "colors": 8,
+  "dither": false,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

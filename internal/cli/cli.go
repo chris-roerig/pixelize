@@ -33,44 +33,13 @@ var supportedExts = map[string]bool{
 	".png": true, ".jpg": true, ".jpeg": true,
 }
 
-type preset struct {
-	Block   int
-	Colors  int
-	Dither  bool
-	Sharpen bool
-	Mode    string
-	Palette string
-}
-
-var presets = map[string]preset{
-	"retro":   {Block: 8, Colors: 32, Dither: true, Mode: "average", Palette: "original"},
-	"gameboy": {Block: 6, Colors: 4, Dither: true, Mode: "average", Palette: "gameboy"},
-	"pico8":   {Block: 6, Colors: 16, Dither: true, Mode: "average", Palette: "pico8"},
-	"nes":     {Block: 6, Colors: 24, Dither: true, Mode: "average", Palette: "nes"},
-	"snes":    {Block: 5, Colors: 64, Dither: true, Mode: "average", Palette: "original"},
-	"genesis": {Block: 6, Colors: 32, Dither: false, Mode: "dominant", Palette: "original"},
-	"gba":     {Block: 4, Colors: 64, Dither: true, Mode: "average", Palette: "original"},
-	"n64":     {Block: 5, Colors: 32, Dither: false, Mode: "average", Palette: "original"},
-	"ps1":     {Block: 5, Colors: 48, Dither: true, Mode: "median", Palette: "original"},
-	"c64":     {Block: 8, Colors: 16, Dither: true, Mode: "average", Palette: "original"},
-	"cga":     {Block: 8, Colors: 4, Dither: true, Mode: "average", Palette: "original"},
-	"sprite":  {Block: 4, Colors: 0, Dither: false, Sharpen: true, Mode: "dominant", Palette: "original"},
-	"poster":  {Block: 12, Colors: 8, Dither: false, Mode: "average", Palette: "original"},
-	"chunky":  {Block: 16, Colors: 16, Dither: false, Mode: "average", Palette: "original"},
-	"fine":    {Block: 3, Colors: 64, Dither: true, Mode: "median", Palette: "original"},
-	"mono":    {Block: 6, Colors: 2, Dither: true, Mode: "average", Palette: "gameboy"},
-}
-
-func presetNames() string {
-	names := make([]string, 0, len(presets))
-	for k := range presets {
-		names = append(names, k)
-	}
-	return strings.Join(names, ", ")
-}
-
 // Run parses flags and executes the pixelize pipeline. Returns an error on failure.
 func Run() error {
+	presets, err := loadPresets()
+	if err != nil {
+		return err
+	}
+
 	block := flag.Int("block", 8, "pixel block size")
 	scale := flag.Int("scale", 0, "nearest-neighbor output scale (default: match input size)")
 	colors := flag.Int("colors", 0, "reduce palette to N colors (0 = unlimited)")
@@ -80,8 +49,10 @@ func Run() error {
 	sharpen := flag.Bool("sharpen", false, "apply edge-enhancement sharpening")
 	mode := flag.String("mode", "average", "sampling mode (average, median, dominant)")
 	palette := flag.String("palette", "original", "color palette (original, pico8, gameboy, nes)")
-	presetFlag := flag.String("preset", "", "apply a named preset ("+presetNames()+")")
+	presetFlag := flag.String("preset", "", "apply a named preset ("+presetNames(presets)+")")
 	logical := flag.Bool("logical", false, "export logical pixel grid without scaling")
+	listPresets := flag.Bool("list-presets", false, "list available presets and exit")
+	listPresetsJSON := flag.Bool("list-presets-json", false, "list available presets as JSON and exit")
 	showVersion := flag.Bool("version", false, "print version and exit")
 
 	flag.Usage = func() {
@@ -90,17 +61,20 @@ func Run() error {
        pixelize --preset all input
 
 Flags:
-      --block int        pixel block size (default 8)
-      --scale int        nearest-neighbor output scale (default: match input size)
-      --colors int       reduce palette to N colors (0 = unlimited)
-      --dither           apply Floyd-Steinberg dithering (auto 32 colors if --colors not set)
-      --bw               reduce to black and white (2 colors, dithered)
-      --sharpen          apply edge-enhancement sharpening
-      --mode string      sampling mode (default "average")
-      --palette string   color palette (default "original")
-      --preset string    apply a named preset (use "all" to render every preset)
-      --logical          export logical pixel grid without scaling
-      --version          print version and exit
+      --block int          pixel block size (default 8)
+      --scale int          nearest-neighbor output scale (default: match input size)
+      --colors int         reduce palette to N colors (0 = unlimited)
+      --dither             apply Floyd-Steinberg dithering (auto 32 colors if --colors not set)
+      --bw                 reduce to black and white (2 colors, dithered)
+      --transparent        make white pixels transparent
+      --sharpen            apply edge-enhancement sharpening
+      --mode string        sampling mode (default "average")
+      --palette string     color palette (default "original")
+      --preset string      apply a named preset, a path to a .json preset, or "all"
+      --list-presets       list available presets and exit
+      --list-presets-json  list available presets as JSON and exit
+      --logical            export logical pixel grid without scaling
+      --version            print version and exit
 
 Modes:
       average            average color of all pixels in the block
@@ -114,23 +88,10 @@ Palettes:
       nes                NES system palette
 
 Presets:
-      retro              classic pixel art (block 8, 32 colors, dithered)
-      gameboy            Game Boy (block 6, 4 colors, gameboy palette, dithered)
-      pico8              PICO-8 (block 6, 16 colors, pico8 palette, dithered)
-      nes                NES (block 6, 24 colors, nes palette, dithered)
-      snes               SNES (block 5, 64 colors, dithered)
-      genesis            Sega Genesis (block 6, 32 colors, dominant mode)
-      gba                Game Boy Advance (block 4, 64 colors, dithered)
-      n64                Nintendo 64 (block 5, 32 colors)
-      ps1                PlayStation 1 (block 5, 48 colors, dithered, median)
-      c64                Commodore 64 (block 8, 16 colors, dithered)
-      cga                CGA (block 8, 4 colors, dithered)
-      sprite             crisp sprites (block 4, dominant mode, sharpened)
-      poster             poster style (block 12, 8 colors)
-      chunky             big bold pixels (block 16, 16 colors)
-      fine               subtle pixelation (block 3, 64 colors, median, dithered)
-      mono               monochrome (block 6, 2 colors, gameboy palette, dithered)
-      all                render input using every preset
+      Run "pixelize --list-presets" to see all available presets.
+      Built-in presets ship with pixelize; add your own JSON files in
+      $XDG_CONFIG_HOME/pixelize/presets/ or ./.pixelize/presets/.
+      Use --preset all to render an input with every preset.
 
 Examples:
       pixelize input.png output.png --block 8 --scale 4
@@ -149,11 +110,29 @@ Examples:
 		return nil
 	}
 
+	if *listPresets {
+		printPresets(presets)
+		return nil
+	}
+
+	if *listPresetsJSON {
+		return printPresetsJSON(presets)
+	}
+
 	// Apply preset as base, then let explicit flags override
 	if *presetFlag != "" && *presetFlag != "all" {
 		p, ok := presets[*presetFlag]
 		if !ok {
-			return fmt.Errorf("unknown preset %q (available: %s, all)", *presetFlag, presetNames())
+			// Fall back to treating the value as a path to a .json preset.
+			if looksLikePresetPath(*presetFlag) {
+				loaded, err := loadPresetFile(*presetFlag)
+				if err != nil {
+					return err
+				}
+				p = loaded
+			} else {
+				return fmt.Errorf("unknown preset %q (available: %s, all)", *presetFlag, presetNames(presets))
+			}
 		}
 		if !flag.CommandLine.Changed("block") {
 			*block = p.Block
@@ -202,7 +181,8 @@ Examples:
 			return err
 		}
 
-		for name, p := range presets {
+		for _, name := range sortedPresetNames(presets) {
+			p := presets[name]
 			cfg := pixelizer.Config{
 				BlockSize: p.Block,
 				Scale:     p.Block,

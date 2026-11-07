@@ -1,0 +1,10 @@
+{
+  "name": "c64",
+  "description": "Commodore 64 (block 8, 16 colors, dithered)",
+  "block": 8,
+  "colors": 16,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

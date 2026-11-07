@@ -1,0 +1,10 @@
+{
+  "name": "snes",
+  "description": "SNES (block 5, 64 colors, dithered)",
+  "block": 5,
+  "colors": 64,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

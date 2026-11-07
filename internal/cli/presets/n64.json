@@ -1,0 +1,10 @@
+{
+  "name": "n64",
+  "description": "Nintendo 64 (block 5, 32 colors)",
+  "block": 5,
+  "colors": 32,
+  "dither": false,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "original"
+}

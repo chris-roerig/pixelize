@@ -1,0 +1,10 @@
+{
+  "name": "ps1",
+  "description": "PlayStation 1 (block 5, 48 colors, dithered, median)",
+  "block": 5,
+  "colors": 48,
+  "dither": true,
+  "sharpen": false,
+  "mode": "median",
+  "palette": "original"
+}

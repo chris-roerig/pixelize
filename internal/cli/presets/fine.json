@@ -1,0 +1,10 @@
+{
+  "name": "fine",
+  "description": "subtle pixelation (block 3, 64 colors, median, dithered)",
+  "block": 3,
+  "colors": 64,
+  "dither": true,
+  "sharpen": false,
+  "mode": "median",
+  "palette": "original"
+}

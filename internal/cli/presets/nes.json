@@ -1,0 +1,10 @@
+{
+  "name": "nes",
+  "description": "NES (block 6, 24 colors, nes palette, dithered)",
+  "block": 6,
+  "colors": 24,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "nes"
+}

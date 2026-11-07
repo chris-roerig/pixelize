@@ -1,0 +1,10 @@
+{
+  "name": "mono",
+  "description": "monochrome (block 6, 2 colors, gameboy palette, dithered)",
+  "block": 6,
+  "colors": 2,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "gameboy"
+}

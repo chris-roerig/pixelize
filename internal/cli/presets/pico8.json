@@ -1,0 +1,10 @@
+{
+  "name": "pico8",
+  "description": "PICO-8 (block 6, 16 colors, pico8 palette, dithered)",
+  "block": 6,
+  "colors": 16,
+  "dither": true,
+  "sharpen": false,
+  "mode": "average",
+  "palette": "pico8"
+}

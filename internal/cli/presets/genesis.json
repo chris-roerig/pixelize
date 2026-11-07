@@ -1,0 +1,10 @@
+{
+  "name": "genesis",
+  "description": "Sega Genesis (block 6, 32 colors, dominant mode)",
+  "block": 6,
+  "colors": 32,
+  "dither": false,
+  "sharpen": false,
+  "mode": "dominant",
+  "palette": "original"
+}
