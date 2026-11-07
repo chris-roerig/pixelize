@@ -17,12 +17,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--list-presets` and `--list-presets-json` to list available presets.
 - Preset files are validated on load; invalid or malformed presets report the
   offending file path.
+- Output path is now optional: with a single input, pixelize infers the output
+  name (`photo.png` -> `photo-pixelized.png`, or `photo-<preset>.png`).
+- Standard input/output support via `-` (e.g. `cat in.png | pixelize - -`).
+- JPEG output when the output path ends in `.jpg`/`.jpeg`.
+- Batch mode now reports per-file progress (`[n/total]`).
+- `curl | sh` installer (`install.sh`) that downloads prebuilt release binaries.
+- GoReleaser configuration and GitHub Actions workflows for CI and tagged
+  releases.
 
 ### Changed
 
 - `--help` no longer hardcodes the preset list; it points to `--list-presets`
   so user-defined presets are always reflected.
 - `--preset all` now renders presets in a deterministic (alphabetical) order.
+- Output encoding is chosen from the output file extension instead of always
+  writing PNG.
 
 ## [0.1.0] - 2026-11-07
 

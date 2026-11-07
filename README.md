@@ -10,6 +10,21 @@ A fast, minimal CLI tool that converts images into pixel art using configurable 
 
 ## Install
 
+Quick install (Linux and macOS) — downloads a prebuilt binary:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chris-roerig/pixelize/main/install.sh | sh
+```
+
+Install a specific version or to a custom directory:
+
+```bash
+PIXELIZE_VERSION=v0.2.0 curl -fsSL https://raw.githubusercontent.com/chris-roerig/pixelize/main/install.sh | sh
+PIXELIZE_BINDIR="$HOME/.local/bin" curl -fsSL https://raw.githubusercontent.com/chris-roerig/pixelize/main/install.sh | sh
+```
+
+With Go:
+
 ```bash
 go install github.com/chris-roerig/pixelize/cmd/pixelize@latest
 ```
@@ -32,6 +47,28 @@ pixelize --block 16 --mode average input.jpg output.png
 pixelize input.png --logical output.png
 pixelize --version
 pixelize --help
+```
+
+### Output Path Inference
+
+The output argument is optional. With a single input, pixelize derives the
+output name automatically:
+
+```bash
+pixelize photo.png                 # -> photo-pixelized.png
+pixelize photo.png --preset gba    # -> photo-gba.png
+```
+
+The output format follows the output file's extension (`.png` or `.jpg`/`.jpeg`).
+
+### Pipes (stdin / stdout)
+
+Use `-` to read from standard input and/or write to standard output, so
+pixelize composes in shell pipelines:
+
+```bash
+cat input.png | pixelize - - --preset gba > output.png
+curl -s https://example.com/img.png | pixelize - --preset nes > out.png
 ```
 
 ### Batch Mode
