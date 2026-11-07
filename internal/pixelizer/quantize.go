@@ -6,6 +6,19 @@ import (
 	"sort"
 )
 
+// straightRGBA reads an internally-built *image.RGBA whose pixels were written
+// with SetRGBA, i.e. stored as straight (non-premultiplied) bytes. It returns
+// the 8-bit channels and reports ok=false for fully transparent pixels. This is
+// distinct from unpremul, which is for decoded source images (premultiplied).
+func straightRGBA(img *image.RGBA, x, y int) (r, g, b, a uint8, ok bool) {
+	i := img.PixOffset(x, y)
+	a = img.Pix[i+3]
+	if a == 0 {
+		return 0, 0, 0, 0, false
+	}
+	return img.Pix[i], img.Pix[i+1], img.Pix[i+2], a, true
+}
+
 // Quantize reduces the image to at most n colors using median-cut.
 // If dither is true, Floyd-Steinberg error diffusion is applied.
 func Quantize(img *image.RGBA, n int, dither bool) *image.RGBA {
@@ -17,8 +30,11 @@ func Quantize(img *image.RGBA, n int, dither bool) *image.RGBA {
 	pixels := make([]color.RGBA, 0, bounds.Dx()*bounds.Dy())
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := img.At(x, y).RGBA()
-			pixels = append(pixels, color.RGBA{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8), uint8(a >> 8)})
+			r, g, b, a, ok := straightRGBA(img, x, y)
+			if !ok {
+				continue // don't let transparent pixels bias the palette
+			}
+			pixels = append(pixels, color.RGBA{r, g, b, a})
 		}
 	}
 
@@ -28,9 +44,13 @@ func Quantize(img *image.RGBA, n int, dither bool) *image.RGBA {
 		dst := image.NewRGBA(bounds)
 		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 			for x := bounds.Min.X; x < bounds.Max.X; x++ {
-				r, g, b, a := img.At(x, y).RGBA()
-				c := color.RGBA{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8), uint8(a >> 8)}
-				dst.SetRGBA(x, y, nearest(c, palette))
+				r, g, b, a, ok := straightRGBA(img, x, y)
+				if !ok {
+					continue // leave fully transparent pixels transparent
+				}
+				chosen := nearest(color.RGBA{r, g, b, 255}, palette)
+				chosen.A = a
+				dst.SetRGBA(x, y, chosen)
 			}
 		}
 		return dst
@@ -48,9 +68,13 @@ func QuantizeFixed(img *image.RGBA, palette []color.RGBA, dither bool) *image.RG
 	dst := image.NewRGBA(bounds)
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			r, g, b, a := img.At(x, y).RGBA()
-			c := color.RGBA{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8), uint8(a >> 8)}
-			dst.SetRGBA(x, y, nearest(c, palette))
+			r, g, b, a, ok := straightRGBA(img, x, y)
+			if !ok {
+				continue
+			}
+			chosen := nearest(color.RGBA{r, g, b, 255}, palette)
+			chosen.A = a
+			dst.SetRGBA(x, y, chosen)
 		}
 	}
 	return dst
@@ -62,11 +86,15 @@ func floydSteinberg(img *image.RGBA, palette []color.RGBA) *image.RGBA {
 
 	// Working buffer in int16 to handle error overflow
 	buf := make([][3]int16, w*h)
+	alpha := make([]uint8, w*h)
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-			r, g, b, _ := img.At(bounds.Min.X+x, bounds.Min.Y+y).RGBA()
+			r, g, b, a, ok := straightRGBA(img, bounds.Min.X+x, bounds.Min.Y+y)
 			i := y*w + x
-			buf[i] = [3]int16{int16(r >> 8), int16(g >> 8), int16(b >> 8)}
+			buf[i] = [3]int16{int16(r), int16(g), int16(b)}
+			if ok {
+				alpha[i] = a
+			}
 		}
 	}
 
@@ -82,6 +110,9 @@ func floydSteinberg(img *image.RGBA, palette []color.RGBA) *image.RGBA {
 				A: 255,
 			}
 			chosen := nearest(clamped, palette)
+			// Carry the source pixel's alpha through unchanged; only RGB is
+			// dithered. This keeps transparency intact on the dither path.
+			chosen.A = alpha[i]
 			dst.SetRGBA(bounds.Min.X+x, bounds.Min.Y+y, chosen)
 
 			errR := old[0] - int16(chosen.R)
@@ -242,18 +273,27 @@ func averageBucket(pixels []color.RGBA) color.RGBA {
 	if len(pixels) == 0 {
 		return color.RGBA{}
 	}
-	var r, g, b, a uint64
+	var r, g, b, a float64
 	for _, p := range pixels {
-		r += uint64(p.R)
-		g += uint64(p.G)
-		b += uint64(p.B)
-		a += uint64(p.A)
+		// Average in linear light to avoid the sRGB darkening bias.
+		r += srgbToLinear[p.R]
+		g += srgbToLinear[p.G]
+		b += srgbToLinear[p.B]
+		a += float64(p.A)
 	}
-	n := uint64(len(pixels))
-	return color.RGBA{uint8(r / n), uint8(g / n), uint8(b / n), uint8(a / n)}
+	n := float64(len(pixels))
+	return color.RGBA{
+		R: linearToSrgb(r / n),
+		G: linearToSrgb(g / n),
+		B: linearToSrgb(b / n),
+		A: uint8(a/n + 0.5),
+	}
 }
 
 func nearest(c color.RGBA, palette []color.RGBA) color.RGBA {
+	if len(palette) == 0 {
+		return c
+	}
 	best := palette[0]
 	bestDist := colorDist(c, best)
 	for _, p := range palette[1:] {
@@ -266,9 +306,8 @@ func nearest(c color.RGBA, palette []color.RGBA) color.RGBA {
 	return best
 }
 
-func colorDist(a, b color.RGBA) int {
-	dr := int(a.R) - int(b.R)
-	dg := int(a.G) - int(b.G)
-	db := int(a.B) - int(b.B)
-	return dr*dr + dg*dg + db*db
+// colorDist returns a perceptual distance between two colors (redmean). Lower
+// is closer.
+func colorDist(a, b color.RGBA) float64 {
+	return redmean([3]uint8{a.R, a.G, a.B}, [3]uint8{b.R, b.G, b.B})
 }

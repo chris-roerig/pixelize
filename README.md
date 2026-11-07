@@ -197,8 +197,9 @@ Generated with `pixelize --preset all`:
 Given a 1024×1024 input with `--block 8`:
 
 1. The image is divided into 8×8 blocks.
-2. Each block is reduced to a single color (the average of all pixels in that block).
+2. Each block is reduced to a single color (by default, the average of all pixels in that block).
 3. This produces a **logical** image of 128×128 pixels.
+4. Colors are optionally reduced (palette or `--colors`), then the grid is scaled.
 
 Output depends on flags:
 
@@ -207,15 +208,39 @@ Output depends on flags:
 
 Partial blocks (when dimensions aren't evenly divisible) are still sampled correctly.
 
+### Color handling
+
+pixelize does its color math carefully so output stays faithful to the source:
+
+- **Linear-light averaging.** Block colors are averaged in linear light rather
+  than gamma-encoded sRGB, which avoids the darkening bias that makes naive
+  pixelizers look muddy.
+- **Perceptual color matching.** Nearest-color decisions (both the built-in
+  palettes and `--colors` reduction) use a perceptual distance (redmean) instead
+  of raw RGB distance, so colors snap to the nearest color the eye expects.
+- **Alpha-correct.** Transparency is handled consistently through sampling,
+  dithering, and quantization.
+
+### Order of operations
+
+The pipeline applies, in order: block sampling → optional sharpen → optional
+white-keying → exactly one color reduction → nearest-neighbor scaling.
+
+Color reduction uses a single strategy, in precedence order: `--bw` > a named
+palette (`pico8`/`gameboy`/`nes`) > `--colors`. When a named palette is set,
+`--colors` is ignored rather than applied as a confusing second reduction.
+
 ## Supported Modes
 
 | Mode | Description |
 |------|-------------|
-| `average` | Average color of all pixels in the block |
+| `average` | Average color of all pixels in the block (in linear light) |
 | `median` | Median color per channel (less affected by outliers) |
-| `dominant` | Most frequent color in the block (preserves hard edges) |
+| `dominant` | Representative color of the most common region (preserves hard edges) |
 
 ## Supported Palettes
+
+Palette matching uses a perceptual distance metric.
 
 | Palette | Description |
 |---------|-------------|

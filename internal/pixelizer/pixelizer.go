@@ -30,6 +30,11 @@ func (m SamplingMode) IsValid() bool {
 }
 
 // Config holds pixelization parameters.
+//
+// Color reduction applies exactly one strategy, in this precedence order:
+// FixedPalette (e.g. --bw) > a named built-in Palette (pico8/gameboy/nes) >
+// median-cut to Colors. When a named palette is set, Colors is ignored rather
+// than applied as a second reduction.
 type Config struct {
 	BlockSize        int
 	Scale            int
@@ -69,20 +74,30 @@ func Pixelize(src image.Image, cfg Config) (*image.RGBA, error) {
 		return nil, err
 	}
 
-	logical := pixelizeBlock(src, cfg.BlockSize, cfg.Mode, cfg.Palette)
+	logical := pixelizeBlock(src, cfg.BlockSize, cfg.Mode)
 
-	if len(cfg.FixedPalette) > 0 {
-		logical = QuantizeFixed(logical, cfg.FixedPalette, cfg.Dither)
-	} else if cfg.Colors > 0 {
-		logical = Quantize(logical, cfg.Colors, cfg.Dither)
-	}
-
+	// Sharpen before color reduction so the sharpened result is snapped back
+	// onto the chosen palette rather than drifting off it.
 	if cfg.Sharpen {
 		logical = sharpen(logical)
 	}
 
+	// Key out white before quantization, while colors are still exact.
 	if cfg.TransparentWhite {
 		logical = whiteToTransparent(logical)
+	}
+
+	// Exactly one color reduction. Precedence: an explicit fixed palette (--bw),
+	// then a named built-in palette, then median-cut (--colors). A named palette
+	// and --colors are mutually exclusive (enforced by the CLI); if both are set
+	// here, the named palette wins to avoid a confusing double reduction.
+	switch {
+	case len(cfg.FixedPalette) > 0:
+		logical = QuantizeFixed(logical, cfg.FixedPalette, cfg.Dither)
+	case cfg.Palette != PaletteOriginal && cfg.Palette != "":
+		logical = mapToPalette(logical, cfg.Palette, cfg.Dither)
+	case cfg.Colors > 0:
+		logical = Quantize(logical, cfg.Colors, cfg.Dither)
 	}
 
 	if cfg.Logical {
@@ -91,7 +106,7 @@ func Pixelize(src image.Image, cfg Config) (*image.RGBA, error) {
 	return ScaleNearest(logical, cfg.Scale), nil
 }
 
-func pixelizeBlock(src image.Image, blockSize int, mode SamplingMode, pal Palette) *image.RGBA {
+func pixelizeBlock(src image.Image, blockSize int, mode SamplingMode) *image.RGBA {
 	bounds := src.Bounds()
 	outW := ceilDiv(bounds.Dx(), blockSize)
 	outH := ceilDiv(bounds.Dy(), blockSize)
@@ -113,10 +128,20 @@ func pixelizeBlock(src image.Image, blockSize int, mode SamplingMode, pal Palett
 			default:
 				c = averageColor(src, sx, sy, ex, ey)
 			}
-			dst.SetRGBA(bx, by, pal.MapColor(c))
+			dst.SetRGBA(bx, by, c)
 		}
 	}
 	return dst
+}
+
+// mapToPalette snaps every pixel in img to the nearest color in a built-in
+// palette, optionally with Floyd-Steinberg dithering.
+func mapToPalette(img *image.RGBA, pal Palette, dither bool) *image.RGBA {
+	colors := pal.Colors()
+	if len(colors) == 0 {
+		return img
+	}
+	return QuantizeFixed(img, colors, dither)
 }
 
 // ScaleNearest scales src by the given factor using nearest-neighbor.

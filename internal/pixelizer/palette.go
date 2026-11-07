@@ -25,6 +25,21 @@ func (p Palette) IsValid() bool {
 	return false
 }
 
+// Colors returns the fixed color list for a built-in palette, or nil for the
+// "original" palette (which performs no mapping).
+func (p Palette) Colors() []color.RGBA {
+	switch p {
+	case PalettePico8:
+		return pico8Colors
+	case PaletteGameboy:
+		return gameboyColors
+	case PaletteNES:
+		return nesColors
+	default:
+		return nil
+	}
+}
+
 // MapColor returns the palette-mapped color.
 func (p Palette) MapColor(c color.RGBA) color.RGBA {
 	switch p {

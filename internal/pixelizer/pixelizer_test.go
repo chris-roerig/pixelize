@@ -29,12 +29,36 @@ func TestAverageColor(t *testing.T) {
 	img.SetRGBA(0, 1, color.RGBA{100, 0, 0, 255})
 	img.SetRGBA(1, 1, color.RGBA{200, 0, 0, 255})
 
+	// Averaging happens in linear light, so the mean of sRGB 100 and 200 is
+	// brighter than the naive sRGB mean of 150. The expected value is the
+	// re-encoded average of the two linearized channels.
+	want := linearToSrgb((srgbToLinear[100] + srgbToLinear[200]) / 2.0)
 	avg := averageColor(img, 0, 0, 2, 2)
-	if avg.R != 150 {
-		t.Errorf("expected R=150, got %d", avg.R)
+	if avg.R != want {
+		t.Errorf("expected R=%d (linear-light mean), got %d", want, avg.R)
+	}
+	if avg.R <= 150 {
+		t.Errorf("linear-light average should be brighter than the sRGB mean of 150, got %d", avg.R)
 	}
 	if avg.A != 255 {
 		t.Errorf("expected A=255, got %d", avg.A)
+	}
+}
+
+func TestAverageColorSameColorPartialAlpha(t *testing.T) {
+	// Build an NRGBA image (straight alpha, like a decoded PNG) with two
+	// pixels of the same color at different alphas. A correct alpha-weighted
+	// average in linear light recovers that color rather than drifting to
+	// black (regression for the premultiply bug).
+	img := image.NewNRGBA(image.Rect(0, 0, 2, 1))
+	img.SetNRGBA(0, 0, color.NRGBA{200, 0, 0, 255})
+	img.SetNRGBA(1, 0, color.NRGBA{200, 0, 0, 51}) // 20% alpha, same color
+	avg := averageColor(img, 0, 0, 2, 1)
+	if avg.R < 196 || avg.R > 204 {
+		t.Errorf("expected R≈200 regardless of alpha, got %d", avg.R)
+	}
+	if avg.G != 0 || avg.B != 0 {
+		t.Errorf("expected G=B=0, got G=%d B=%d", avg.G, avg.B)
 	}
 }
 
