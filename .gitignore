@@ -3,6 +3,8 @@
 
 # OS files
 .DS_Store
+# macOS AppleDouble metadata (created on non-HFS/network volumes)
+._*
 
 # IDE
 .idea/
