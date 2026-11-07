@@ -3,6 +3,7 @@ package cli
 import (
 	"embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ type preset struct {
 // time rather than mid-render.
 func (p preset) validate() error {
 	if p.Name == "" {
-		return fmt.Errorf("preset is missing a name")
+		return errors.New("preset is missing a name")
 	}
 	cfg := pixelizer.Config{
 		BlockSize: p.Block,

@@ -47,6 +47,7 @@ type Config struct {
 	Sharpen          bool
 	FixedPalette     []color.RGBA
 	TransparentWhite bool
+	Grid             bool
 }
 
 // Validate returns an error if the config is invalid.
@@ -101,7 +102,11 @@ func Pixelize(src image.Image, cfg Config) (*image.RGBA, error) {
 	if cfg.Logical {
 		return logical, nil
 	}
-	return ScaleNearest(logical, cfg.Scale), nil
+	out := ScaleNearest(logical, cfg.Scale)
+	if cfg.Grid {
+		out = applyGrid(out, cfg.Scale)
+	}
+	return out, nil
 }
 
 func pixelizeBlock(src image.Image, blockSize int, mode SamplingMode) *image.RGBA {

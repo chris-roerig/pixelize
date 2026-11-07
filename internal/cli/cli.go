@@ -51,6 +51,8 @@ func Run() error {
 	bw := flag.Bool("bw", false, "reduce to black and white")
 	transparent := flag.Bool("transparent", false, "make white pixels transparent")
 	sharpen := flag.Bool("sharpen", false, "apply edge-enhancement sharpening")
+	grid := flag.Bool("grid", false, "draw a subtle pixel-grid overlay on scaled output")
+	paletteOut := flag.String("palette-out", "", "write the output's palette to a JSON file and exit")
 	mode := flag.String("mode", "average", "sampling mode (average, median, dominant)")
 	palette := flag.String("palette", "original", "color palette ("+paletteNames(palettes)+")")
 	presetFlag := flag.String("preset", "", "apply a named preset ("+presetNames(presets)+")")
@@ -73,8 +75,10 @@ Flags:
       --bw                 reduce to black and white (2 colors, dithered)
       --transparent        make white pixels transparent
       --sharpen            apply edge-enhancement sharpening
+      --grid               draw a subtle pixel-grid overlay on scaled output
       --mode string        sampling mode (default "average")
       --palette string     color palette (default "original")
+      --palette-out file   write the output's palette to a JSON file and exit
       --preset string      apply a named preset, a path to a .json preset, or "all"
       --list-presets       list available presets and exit
       --list-presets-json  list available presets as JSON and exit
@@ -255,10 +259,19 @@ Examples:
 		Logical:          *logical,
 		FixedPalette:     fixedPal,
 		TransparentWhite: *transparent,
+		Grid:             *grid,
 	}
 
 	if err := cfg.Validate(); err != nil {
 		return err
+	}
+
+	// --palette-out: process the input and write the resulting palette as JSON.
+	if *paletteOut != "" {
+		if len(args) < 1 {
+			return errors.New("usage: pixelize input.png --palette-out palette.json")
+		}
+		return writePaletteFile(args[0], *paletteOut, cfg)
 	}
 
 	// Batch mode: single arg that is a directory.

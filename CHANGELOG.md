@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file directly.
 - `--list-presets` and `--list-presets-json` to list available presets.
 - `--list-palettes` to list available palettes.
+- `--palette-out` extracts the palette an output uses to a reusable JSON file.
+- `--grid` draws a subtle pixel-grid / CRT overlay on scaled output.
 - Palettes are now JSON files (name + hex colors) instead of hardcoded values.
   Built-in palettes ship embedded and can be overridden or extended without
   recompiling, via `$XDG_CONFIG_HOME/pixelize/palettes/`,

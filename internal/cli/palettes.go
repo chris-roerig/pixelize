@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/chris-roerig/pixelize/internal/imageio"
+	"github.com/chris-roerig/pixelize/internal/pixelizer"
 )
 
 //go:embed palettes/*.json
@@ -239,4 +242,38 @@ func resolvePaletteColors(name string, palettes map[string]resolvedPalette) ([]c
 		return nil, fmt.Errorf("unknown palette %q (available: %s)", name, paletteNames(palettes))
 	}
 	return p.Colors, nil
+}
+
+// writePaletteFile processes input through cfg and writes the resulting
+// palette to a JSON file usable with --palette.
+func writePaletteFile(input, outPath string, cfg pixelizer.Config) error {
+	src, err := imageio.Load(input)
+	if err != nil {
+		return err
+	}
+	out, err := pixelizer.Pixelize(src, cfg)
+	if err != nil {
+		return err
+	}
+	colors := pixelizer.ExtractPalette(out)
+	hex := make([]string, len(colors))
+	for i, c := range colors {
+		hex[i] = fmt.Sprintf("#%02x%02x%02x", c.R, c.G, c.B)
+	}
+	name := strings.TrimSuffix(filepath.Base(outPath), ".json")
+	p := palette{
+		Name:        name,
+		Description: fmt.Sprintf("%d colors extracted from %s", len(hex), filepath.Base(input)),
+		Colors:      hex,
+	}
+	data, err := json.MarshalIndent(p, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	if err := os.WriteFile(outPath, data, 0o644); err != nil {
+		return fmt.Errorf("write palette %s: %w", outPath, err)
+	}
+	fmt.Fprintf(os.Stderr, "Wrote %s (%d colors)\n", outPath, len(hex))
+	return nil
 }

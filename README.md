@@ -93,6 +93,8 @@ pixelize ./photos --block 8
 | `--mode` | average | Sampling mode |
 | `--palette` | original | Color palette |
 | `--sharpen` | false | Apply edge-enhancement sharpening |
+| `--grid` | false | Draw a subtle pixel-grid overlay on scaled output |
+| `--palette-out` | — | Write the output's palette to a JSON file and exit |
 | `--preset` | — | Apply a named preset, a path to a `.json` preset, or `all` |
 | `--list-presets` | — | List available presets and exit |
 | `--logical` | false | Export the logical pixel grid without scaling |
@@ -284,3 +286,26 @@ pixelize input.png output.png --palette ./sunset.json
 
 To contribute a palette upstream, add a JSON file to
 `internal/cli/palettes/` and open a pull request.
+
+### Extracting a Palette
+
+Dump the palette an output actually uses to a reusable JSON file with
+`--palette-out`:
+
+```bash
+pixelize photo.png --palette-out mypalette.json --colors 8
+pixelize other.png output.png --palette ./mypalette.json
+```
+
+The extracted file is a ready-to-use palette (name + hex colors), so you can
+lift a palette from one image and apply it to others.
+
+### Pixel Grid
+
+Add `--grid` to draw a subtle darkened grid between pixels on scaled output —
+a graph-paper / CRT look that emphasizes the pixel structure:
+
+```bash
+pixelize photo.png output.png --block 16 --scale 16 --grid
+```
+
