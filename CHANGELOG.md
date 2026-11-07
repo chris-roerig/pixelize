@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-07
+
+First stable release.
+
 ### Added
 
 - Presets are now JSON files instead of hardcoded values. Built-in presets ship
@@ -86,5 +90,6 @@ Initial tagged release. Establishes the baseline feature set.
 - PNG and JPEG input; PNG output.
 - Build-time version injection via `-ldflags`.
 
-[Unreleased]: https://github.com/chris-roerig/pixelize/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/chris-roerig/pixelize/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/chris-roerig/pixelize/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/chris-roerig/pixelize/releases/tag/v0.1.0
