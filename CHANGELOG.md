@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-07
+
+### Added
+
+- Shell completion scripts for zsh, bash, and fish (in `completions/`). They
+  complete all flags and the `dump-all` command, and dynamically complete
+  `--preset` and `--palette` values (including custom ones). The installer sets
+  them up automatically, and they are bundled in release archives.
+
 ## [1.1.0] - 2026-11-07
 
 ### Added
@@ -103,7 +112,8 @@ Initial tagged release. Establishes the baseline feature set.
 - PNG and JPEG input; PNG output.
 - Build-time version injection via `-ldflags`.
 
-[Unreleased]: https://github.com/chris-roerig/pixelize/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/chris-roerig/pixelize/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/chris-roerig/pixelize/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/chris-roerig/pixelize/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/chris-roerig/pixelize/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/chris-roerig/pixelize/releases/tag/v0.1.0

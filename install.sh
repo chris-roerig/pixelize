@@ -128,6 +128,31 @@ else
 fi
 
 info "Installed $BINARY to $BINDIR/$BINARY"
+
+# Install shell completions if the archive bundled them (best-effort, user-local).
+if [ -d "$TMP/completions" ]; then
+	# zsh: a dir on the default fpath for user functions.
+	zsh_dir="$HOME/.zsh/completions"
+	if [ -f "$TMP/completions/_pixelize" ]; then
+		mkdir -p "$zsh_dir" 2>/dev/null && cp "$TMP/completions/_pixelize" "$zsh_dir/_pixelize" 2>/dev/null && \
+			info "Installed zsh completion to $zsh_dir/_pixelize"
+	fi
+	# bash: user bash-completion dir.
+	bash_dir="${BASH_COMPLETION_USER_DIR:-$HOME/.local/share/bash-completion}/completions"
+	if [ -f "$TMP/completions/pixelize.bash" ]; then
+		mkdir -p "$bash_dir" 2>/dev/null && cp "$TMP/completions/pixelize.bash" "$bash_dir/pixelize" 2>/dev/null && \
+			info "Installed bash completion to $bash_dir/pixelize"
+	fi
+	# fish: user completions dir.
+	fish_dir="${XDG_CONFIG_HOME:-$HOME/.config}/fish/completions"
+	if [ -f "$TMP/completions/pixelize.fish" ]; then
+		mkdir -p "$fish_dir" 2>/dev/null && cp "$TMP/completions/pixelize.fish" "$fish_dir/pixelize.fish" 2>/dev/null && \
+			info "Installed fish completion to $fish_dir/pixelize.fish"
+	fi
+	info "Restart your shell (or source the completion) to enable tab completion."
+	info "zsh users: ensure 'fpath=(~/.zsh/completions \$fpath)' is set before compinit in ~/.zshrc."
+fi
+
 case ":$PATH:" in
 	*":$BINDIR:"*) ;;
 	*) info "Note: $BINDIR is not on your PATH. Add it, e.g.:"

@@ -15,6 +15,7 @@ catalog of retro console presets.
 ## Contents
 
 - [Install](#install)
+  - [Shell completions](#shell-completions)
 - [Quick Start](#quick-start)
 - [Command Reference](#command-reference)
   - [Flags](#flags)
@@ -81,6 +82,39 @@ Verify the install:
 ```bash
 pixelize --version
 ```
+
+### Shell completions
+
+The `curl | sh` installer sets up tab completion automatically for zsh, bash,
+and fish (restart your shell afterward). To install manually, grab the files
+from the [`completions/`](completions/) directory (or the release archive):
+
+**zsh** — place `_pixelize` on your `$fpath` and reload:
+
+```bash
+mkdir -p ~/.zsh/completions
+cp completions/_pixelize ~/.zsh/completions/_pixelize
+# in ~/.zshrc, before `compinit`:
+#   fpath=(~/.zsh/completions $fpath)
+#   autoload -Uz compinit && compinit
+```
+
+**bash** — source it from `~/.bashrc`:
+
+```bash
+cp completions/pixelize.bash ~/.local/share/bash-completion/completions/pixelize
+# or: source /path/to/completions/pixelize.bash
+```
+
+**fish** — drop it in your fish completions directory:
+
+```bash
+cp completions/pixelize.fish ~/.config/fish/completions/pixelize.fish
+```
+
+Completion covers all flags and the `dump-all` command, and completes
+`--preset` and `--palette` values dynamically — including any custom presets or
+palettes you've added.
 
 ## Quick Start
 

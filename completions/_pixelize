@@ -1,0 +1,58 @@
+#compdef pixelize
+# zsh completion for pixelize.
+#
+# Install: place this file (named `_pixelize`) in a directory on your $fpath,
+# e.g. ~/.zsh/completions, and ensure your ~/.zshrc has:
+#     fpath=(~/.zsh/completions $fpath)
+#     autoload -Uz compinit && compinit
+
+_pixelize_presets() {
+  local -a presets
+  presets=(${(f)"$(pixelize --list-presets 2>/dev/null | awk '{print $1}')"})
+  presets+=(all)
+  _describe -t presets 'preset' presets
+}
+
+_pixelize_palettes() {
+  local -a palettes
+  palettes=(${(f)"$(pixelize --list-palettes 2>/dev/null | awk '{print $1}')"})
+  _describe -t palettes 'palette' palettes
+}
+
+_pixelize() {
+  local curcontext="$curcontext" state line
+  typeset -A opt_args
+
+  _arguments -s \
+    '--block=[pixel block size]:block size:' \
+    '--scale=[nearest-neighbor output scale]:scale:' \
+    '--colors=[reduce palette to N colors]:colors:' \
+    '--dither[apply Floyd-Steinberg dithering]' \
+    '--bw[reduce to black and white]' \
+    '--transparent[make white pixels transparent]' \
+    '--sharpen[apply edge-enhancement sharpening]' \
+    '--grid[draw a subtle pixel-grid overlay]' \
+    '--logical[export logical pixel grid without scaling]' \
+    '--mode=[sampling mode]:mode:(average median dominant)' \
+    '--palette=[color palette]:palette:_pixelize_palettes' \
+    '--preset=[apply a named preset]:preset:_pixelize_presets' \
+    '--palette-out=[write the output palette to a JSON file]:file:_files -g "*.json"' \
+    '--list-presets[list available presets and exit]' \
+    '--list-presets-json[list available presets as JSON and exit]' \
+    '--list-palettes[list available palettes and exit]' \
+    '--force[overwrite existing files (used with dump-all)]' \
+    '--version[print version and exit]' \
+    '--help[print usage and exit]' \
+    '1: :->first' \
+    '*:file:_files'
+
+  case $state in
+    first)
+      _alternative \
+        'commands:command:(dump-all)' \
+        'files:input file:_files'
+      ;;
+  esac
+}
+
+_pixelize "$@"
